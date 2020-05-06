@@ -13,15 +13,12 @@
     <script src="{% static 'js/bootstrap.min.js' %}"></script>
 </head>
 
-<body style="background-image: linear-gradient(rgb(83, 8, 51), #6B0F1A);; height: 100%; padding-top: 70px;">
+<body style="background-image: linear-gradient(#191654, #43C6AC); height: 100%; padding-top: 70px;">
 
     <!-- navbar  -->
-    <div>
-        <nav class="navbar navbar-expand navbar-light fixed-top shadow-lg"
-            style="background-color: rgba(255, 255, 255, 0.8)">
-            <a class="navbar-brand mx-auto text-black font-weight-bold " href="{%url 'dashboard' %}">Dashboard</a>
-        </nav>
-    </div>
+    <nav class="navbar navbar-dark fixed-top">
+        <a class="navbar-brand mx-auto text-black font-weight-bold " href="{%url 'dashboard' %}">Dashboard</a>
+    </nav>
     <!-- end of navbar  -->
 
     <!-- form  -->
@@ -39,7 +36,8 @@
                     <div class="form-group">
                         <label for="username">{{ form.name.label_tag}}</label>
                         {{ form.name }}
-                        <small id="usernameHelp" class="form-text text-muted">Please enter a project name {{ projectExist  }}</small>
+                        <small id="usernameHelp" class="form-text text-muted">Please enter a project name
+                            {{ projectExist  }}</small>
                         <div class="invalid-feedback">
                             <p> A project wtih this name is already exists.</p>
                         </div>
@@ -50,8 +48,9 @@
                         <small id="usernameHelp" class="form-text text-muted">Please provide a brief description of the
                             project</small>
                     </div>
-
-                    <input type="submit" class="btn btn-danger" value="Create New Project" />
+                    <div class="text-right">
+                        <input type="submit" class="btn btn-primary" value="Create New Project" />
+                    </div>
                 </form>
             </div>
         </div>

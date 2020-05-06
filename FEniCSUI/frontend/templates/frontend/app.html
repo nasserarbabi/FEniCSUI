@@ -13,10 +13,12 @@
   {% csrf_token %}
 
   <script type="text/javascript">
-  var user = "{{user}}";
-  var project = "{{project_id}}";
-  var projectName = "{{projectName}}"
+    var project = "{{project_id}}";
+    var projectName = "{{projectName}}"
   </script>
+  <nav class="navbar navbar-dark sticky-top p-0" style="background-color: #191654;">
+    <a class="navbar-brand mx-auto text-black font-weight-bold " href="{% url 'dashboard' %}">Go to dashboard</a>
+  </nav>
   <div id="app" style="width: 100%; height: 100%;">
     <!-- React -->
   </div>
