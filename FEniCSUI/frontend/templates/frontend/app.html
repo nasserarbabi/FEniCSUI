@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html style="height: 100%;">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}" />
+  <title>FEniCS User Interface</title>
+</head>
+
+<body style="height: 100%;">
+  {% csrf_token %}
+
+  <script type="text/javascript">
+  var user = "{{user}}";
+  var project = "{{project_id}}";
+  var projectName = "{{projectName}}"
+  </script>
+  <div id="app" style="width: 100%; height: 100%;">
+    <!-- React -->
+  </div>
+</body>
+<script src="{% static 'frontend/main.js' %}"></script>
+
+</html>

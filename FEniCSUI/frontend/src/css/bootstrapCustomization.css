@@ -1,0 +1,85 @@
+/* this is for customization of bootstrap */
+
+/* reduce the space between form inputs */
+.form-group {
+    margin-bottom: 5px;
+}
+
+/* make tree */
+.btn-link {
+    color: black;
+    padding: 0;
+    padding-left: 15px;
+}
+
+ /* tree shape  */
+tr::before{
+    content: '';
+    width: 13px;
+    height: 29px;
+    border-left: solid black;
+    border-bottom: solid black;
+    display: block;
+    position: relative;
+    top: -10px;
+    left: 15px;
+}
+
+
+/* remove background from card header */
+.card {
+    background-color: transparent;
+    border: none;
+}
+
+
+/* hidescrol bar  */
+::-webkit-scrollbar {
+    width: 0px;  /* Remove scrollbar space */
+    background: transparent;  /* Optional: just make scrollbar invisible */
+}
+
+
+/* customize side bar */
+#sideBar{
+    background-color: rgb(255, 255, 255);
+    box-shadow: rgb(158, 158, 158) 5px 5px 10px;
+}
+
+/* remove border and background from side bar buttons */
+.btn-sideBar {
+    color: #212529;
+    background-color: #f8f9fa00;
+    border: none;
+  }
+  
+  .btn-sideBar:hover {
+    color: #212529;
+    background-color: #e2e6ea;
+    border-color: #dae0e5;
+  }
+  
+  .btn-sideBar:focus, .btn-sideBar.focus {
+    color: #212529;
+    background-color: #e2e6ea;
+    border-color: #dae0e5;
+    box-shadow: 0 0 0 0.2rem rgba(216, 217, 219, 0.5);
+  }
+  
+  .btn-sideBar.disabled, .btn-sideBar:disabled {
+    color: #212529;
+    background-color: #f8f9fa;
+    border-color: #f8f9fa;
+  }
+  
+  .btn-sideBar:not(:disabled):not(.disabled):active, .btn-sideBar:not(:disabled):not(.disabled).active,
+  .show > .btn-sideBar.dropdown-toggle {
+    color: #212529;
+    background-color: #dae0e5;
+    border-color: #d3d9df;
+  }
+  
+  .btn-sideBar:not(:disabled):not(.disabled):active:focus, .btn-sideBar:not(:disabled):not(.disabled).active:focus,
+  .show > .btn-sideBar.dropdown-toggle:focus {
+    box-shadow: 0 0 0 0.2rem rgba(216, 217, 219, 0.5);
+  }

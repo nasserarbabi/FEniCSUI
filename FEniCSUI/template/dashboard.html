@@ -1,0 +1,73 @@
+{% load static %}
+<!doctype html>
+<html style="height: 100%;">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title> FEniCSUI</title>
+    <link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.ico' %}" />
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+</head>
+
+<body style="background-image: linear-gradient(#373B44, #4286f4);; height: 100%; padding-top: 100px;">
+
+    <div>
+        <nav class="navbar navbar-expand navbar-light fixed-top shadow-lg"
+            style="background-color: rgba(255, 255, 255, 0.8)">
+            <a class="navbar-brand mx-auto text-black font-weight-bold " href="#">Dashboard</a>
+        </nav>
+    </div>
+    <!-- existing projects -->
+
+    <div class="container">
+        <div id="accordion">
+            <div class="card">
+                <div class="card-header">
+                    <a href="newProject" class="btn btn-link text-secondary font-weight-bold">Add new project</a>
+                </div>
+            </div>
+            {% for project in projectList %}
+            <div class="card">
+                <div class="card-header">
+                    <div class="row">
+                        <div class="col-10">
+                            <button class="btn btn-link text-secondary font-weight-bold" data-toggle="collapse"
+                                data-target='#{{project.name|cut:" "}}' aria-controls='{{project.name|cut:" "}}'>
+                                {{project.name}}
+                            </button>
+                        </div>
+
+                        <div class="col-2">
+                            <form method="post">
+                                {% csrf_token %}
+                                <button type="submit" name='removeProject' value='{{project.id}}' class="close"
+                                    aria-label="Close" data-toggle="tooltip" data-placement="top"
+                                    title="Remove the project">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div id="{{project.name|cut:" "}}" class="collapse" aria-labelledby="headingOne"
+                    data-parent="#accordion">
+                    <div class="card-body">
+                        <h6 class="card-title">Description:</h6>
+                        <p class="card-body">{{project.description}}</p>
+                        <div class="text-right">
+                            <a href="{% url 'app' project.id %}" class="btn btn-primary align-rigth">Go to the
+                                project</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+
+</html>
