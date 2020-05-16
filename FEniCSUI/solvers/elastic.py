@@ -6,23 +6,16 @@ import time
 
 # reading args from command line, please make sure the arguments are in order
 projectId = sys.argv[1]
-auth = sys.argv[2]
-cookie = sys.argv[3]
 
 # get configuration from server
 conn = http.client.HTTPConnection("host.docker.internal:8000")
-payload = ''
-headers = {
-  'Authorization': 'Basic {}'.format(auth),
-  'Cookie': cookie
-}
-conn.request("GET", "/getConfig/{}".format(projectId), payload, headers)
+conn.request("GET", "/getConfig/{}".format(projectId))
 res = conn.getresponse()
 data = res.read()
 config = json.loads(data)
 
 # update progress
-headers['Content-Type'] = 'application/json'
+headers = {'Content-Type': 'application/json'}
 
 for i in range (20):
   payload = json.dumps({"status":"STARTED", "percent": i*5})
@@ -36,5 +29,5 @@ conn.close()
 
 
 # post results to server
-payload = json.dumps(config)
+payload = json.dumps({"projectId":projectId,"resutls":"will be published"})
 conn.request("POST", "/results/{}".format(projectId), payload, headers)

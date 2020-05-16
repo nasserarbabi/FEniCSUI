@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import visualizationMesh
+# from .models import visualizationMesh
 
 # admin.site.register(projects)
-admin.site.register(visualizationMesh)
+# admin.site.register(visualizationMesh)

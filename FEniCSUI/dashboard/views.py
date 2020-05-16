@@ -42,7 +42,7 @@ def newProject(request):
             project = form.save(commit=False)
             if  not projects.objects.filter(name=project.name).exists():
                 project.save()
-                AnalysisConfig.objects.create(project=project)
+                AnalysisConfig.objects.create(project=project, config={})
                 return HttpResponseRedirect("/dashboard")
             else:
                 projectExist = True

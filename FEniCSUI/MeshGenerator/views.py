@@ -1,7 +1,6 @@
 from rest_framework.response import Response
-from .models import visualizationMesh, projects
+from dashboard.models import projects
 from .mesher import gmsh, mshReader
-from .serializer import bufferedGeometrySerializer
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from django.views.generic import TemplateView
@@ -37,7 +36,7 @@ class mesher(APIView):
 
         # save mesh to database
         config = get_object_or_404(AnalysisConfig, project=project)
-        config.mesh = json.loads(meshData.readFile())
+        config.mesh = meshData.readFile()
         config.visualizationMesh = meshData.bufferedMesh
         config.save()
 
