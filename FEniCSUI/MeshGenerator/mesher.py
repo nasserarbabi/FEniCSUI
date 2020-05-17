@@ -20,9 +20,17 @@ class gmsh():
             "./media/{}".format(analysisId))+'/mesh.msh'
         self.points = []
 
+    def visualizationFaceMesh(self):
+        '''
+        mesh the faces of the geometry and save the result, used to visualize faces in 3D meshes
+        output:
+            file:: "visualizationEdgeMesh.msh" visualizationEdgeMesh.msh containing edge meshes
+            JSON:: "edges" a dictionary containing edge numbers and their mesh
+        '''
+        pass
     def visualizationEdgeMesh(self):
         '''
-        mesh the edges of the geometry and save the result
+        mesh the edges of the geometry and save the result, used to visualize edges
         output:
             file:: "visualizationEdgeMesh.msh" visualizationEdgeMesh.msh containing edge meshes
             JSON:: "edges" a dictionary containing edge numbers and their mesh
@@ -102,6 +110,7 @@ class mshReader():
             "./media/{}".format(analysisId))+'/mesh.msh'
         self.nodes = []
         self.connectivity = []
+        self.volumes = {} # will contain the volume meshes
         self.faces = {}
         self.edges = {}
         self.points = {}
@@ -129,18 +138,20 @@ class mshReader():
                 if line[1] == "15":  # element type of 15 is a point
                     self.points[line[4]] = int(line[4])
 
-                elif line[1] == "1":  # element type of 2 is a line
+                elif line[1] == "1":  # element type of 1 is a line
                     if line[4] not in self.edges.keys():
                         self.edges[line[4]] = []
-                    self.edges[line[4]].append([int(line[5]), int(line[6])])
+                    nodes = [int(line[5])-1, int(line[6])-1]
+                    nodes.sort()
+                    self.edges[line[4]].append(nodes)
 
                 elif line[1] == "2":  # element type of 2 is a triangle
                     if line[4] not in self.faces.keys():
                         self.faces[line[4]] = []
-                    self.faces[line[4]].append(
-                        [int(line[5]), int(line[6]), int(line[7])])
                     self.connectivity.append(
                         [int(line[5]), int(line[6]), int(line[7])])
+                    self.faces[line[4]].append(
+                        int(len(self.connectivity)-1))
         mesh = {
             "nodes": self.nodes.tolist(),
             "connectivity": self.connectivity,
@@ -157,8 +168,9 @@ class mshReader():
         bufferedPoints = copy.deepcopy(self.points)
 
         for face in bufferedFaces.keys():
-            bufferedFaces[face] = [self.nodes[values[x]-1].tolist()
-                                   for values in self.faces[face] for x in range(3)]
+            bufferedFaces[face] = [self.nodes[self.connectivity[faceNum][x]-1].tolist()
+                                   for faceNum in self.faces[face] for x in range(3)]
+                                   
             bufferedFaces[face] = list(itr.chain(*bufferedFaces[face]))
 
         for edge in bufferedEdges.keys():
@@ -203,4 +215,3 @@ class mshReader():
 
 if __name__ == "__main__":
     part = mshReader("1")
-    api_gmsh.initialize()

@@ -142,6 +142,8 @@ class getConfiguration(APIView):
         project = get_object_or_404(projects, id=kwargs['project_id'])
         config = AnalysisConfig.objects.filter(project=project).values()[0]
         config.pop('visualizationMesh', None)
+        config.pop('mesh', None)
+        config.pop('result',None)
         return Response(data=config, status=status.HTTP_200_OK)
 
 

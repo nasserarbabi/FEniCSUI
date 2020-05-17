@@ -36,7 +36,7 @@ class mesher(APIView):
 
         # save mesh to database
         config = get_object_or_404(AnalysisConfig, project=project)
-        config.mesh = meshData.readFile()
+        config.mesh = meshData.mesh
         config.visualizationMesh = meshData.bufferedMesh
         config.save()
 
@@ -69,7 +69,7 @@ class uploadStep(APIView):
 
         # save mesh to database
         config = get_object_or_404(AnalysisConfig, project=project)
-        config.mesh = json.loads(meshData.readFile())
+        config.mesh = json.loads(meshData.mesh)
         config.visualizationMesh = meshData.bufferedMesh
         config.save()
 
