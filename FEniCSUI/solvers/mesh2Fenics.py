@@ -8,16 +8,15 @@ from collections import namedtuple
 #__email__ = "nasser@composites.ubc.ca"
 
 
-def meshReader(jsonMesh):
+def meshReader(dictMesh):
     ''' converts json mesh to fenics mesh and apply the boundary conditions.
-    JSON:: jsonMesh,  the mesh from database in the form of JSON
+    dict:: dictMesh,  the mesh from database in the form of a python dictionary
 
     output:
     dolfin.ccp.mesh:: feMesh, mesh defined in fenics object
     '''
 
-    # conver json to object
-    dictMesh = json.loads(jsonMesh)
+    # conver dict to object
     mesh = namedtuple("mesh", dictMesh.keys())(*dictMesh.values())
 
     nodes = np.array(mesh.nodes)

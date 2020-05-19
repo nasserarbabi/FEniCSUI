@@ -3,17 +3,22 @@ from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from dashboard.models import projects
 from .models import AnalysisConfig, SolverResults, SolverProgress
-from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser, FileUploadParser
+from rest_framework.renderers import JSONRenderer
 from rest_framework import status
 import docker
 import os
 from base64 import b64encode
 import json
+from zipfile import ZipFile
+from django.http import HttpResponse
+from wsgiref.util import FileWrapper
 
 
 class solverConfig(APIView):
 
     parser_classes = [FormParser, MultiPartParser]
+
 
     def get(self, request, *args, **kwargs):
         """
@@ -39,6 +44,10 @@ class solverConfig(APIView):
         parentConfig = AnalysisConfig.objects.get(project=project)
         jsonHelper = json.loads(parentConfig.config)
 
+        # if request does not contain a name
+        if not "Name" in data:
+            return Response(data="Please provide a 'Name' for the entry", status=400)
+
         # if there is no category similar to the user request
         if category not in jsonHelper:
             jsonHelper[category] = []
@@ -60,6 +69,11 @@ class solverConfig(APIView):
         """
         project = get_object_or_404(projects, id=kwargs['project_id'])
         data = request.data.dict()
+
+        # if request does not contain a name
+        if not "Name" in data:
+            return Response(data="Please provide a 'Name' for the entry", status=400)
+
         category = request.query_params.get('category')
         list_id = int(request.query_params.get('id'))
         parentConfig = AnalysisConfig.objects.get(project=project)
@@ -105,6 +119,7 @@ class Categories(APIView):
 
     parser_classes = [FormParser, MultiPartParser]
 
+
     def get(self, request, *args, **kwargs):
         """
         Return the existing categories in the solver config
@@ -135,21 +150,20 @@ class getConfiguration(APIView):
 
     parser_classes = [FormParser, MultiPartParser]
 
+
     def get(self, request, *args, **kwargs):
         """
         Get the solver config to be submitted to the analysis
         """
         project = get_object_or_404(projects, id=kwargs['project_id'])
         config = AnalysisConfig.objects.filter(project=project).values()[0]
-        config.pop('visualizationMesh', None)
-        config.pop('mesh', None)
-        config.pop('result',None)
-        return Response(data=config, status=status.HTTP_200_OK)
+        return Response(data=config["config"], status=status.HTTP_200_OK)
 
 
 class solvers(APIView):
 
     parser_classes = [FormParser, MultiPartParser]
+
 
     def get(self, request, *args, **kwargs):
         """
@@ -172,22 +186,58 @@ class solvers(APIView):
                 volumes={solverPath: {
                     'bind': '/home/fenics/shared', 'mode': 'rw'}},
                 working_dir="/home/fenics/shared",
-                # runs solver.py with three arguments to be passed in to python file
-                command=["`python3 {}.py {}`".format(solver, project.id)],
+                # runs solver.py with two arguments to be passed in to python file
+                command=["`sudo pip3 install requests \npython3 solverHub.py {} {}`".format(
+                    project.id, solver)],
+                name="FEniCSDocker",
                 auto_remove=True,
                 detach=True)
         except:
-            message = '''please check if the docker is running. If you are woking with WSL, 
-            make sure it has access to the windows docker. Instructions can be fount 
-            at: https://nickjanetakis.com/blog/setting-up-docker-for-windows-and-wsl-to-work-flawlessly'''
+            message = '''please check if the docker is running, and if a container with the name FEniCSDocker does not exist.
+             If you are woking with WSL, make sure it has access to the windows docker. 
+             Instructions can be found at: https://nickjanetakis.com/blog/setting-up-docker-for-windows-and-wsl-to-work-flawlessly'''
             print(message)
             return Response(data=message, status=500)
         return Response(data="submitted to analysis", status=status.HTTP_200_OK)
 
+    def delete(self, request, *args, **kwargs):
+        """
+        kills the running docker container
+        """
+        client = docker.from_env()
+        try:
+            container = client.containers.get("FEniCSDocker")
+            container.stop()
+            return Response(data="container stopped successfully", status=200)
+        except:
+            return Response(data="No container running", status=404)
 
-class resutls(APIView):
+class saveResults(APIView):
 
-    parser_classes = [JSONParser]
+    parser_classes = [FileUploadParser]
+
+    def put(self, request, filename, format=None, *args, **kwargs):
+        """
+        save results to media folder. a query will be created to make it available for download
+        """
+        project = get_object_or_404(projects, id=kwargs['project_id'])
+        fileType = request.query_params.get('fileType')
+        data = request.data['file']
+        folderPath = os.path.abspath(
+            "../FEniCSUI/media/{}/results/".format(kwargs['project_id']))
+        os.makedirs(folderPath, exist_ok=True)
+        filePath = '{}/{}.{}'.format(folderPath, filename, fileType)
+        with open(filePath, 'wb+') as destination:
+            for chunk in data.chunks():
+                destination.write(chunk)
+        if not SolverResults.objects.filter(project=project).exists():
+            SolverResults.objects.create(project=project, path=folderPath)
+
+
+        return Response(data="results updated at {}".format(filePath), status=status.HTTP_201_CREATED)
+
+
+class downloadResults(APIView):
 
     def get(self, request, *args, **kwargs):
         """
@@ -196,28 +246,27 @@ class resutls(APIView):
         project = get_object_or_404(projects, id=kwargs['project_id'])
         if (SolverResults.objects.filter(project=project).exists()):
             resutls = SolverResults.objects.filter(project=project).values()[0]
+            folderPath = resutls['path']
+            # create a ZipFile object
+            with ZipFile('{}/results.zip'.format(folderPath), 'w') as zipObj:
+                # Iterate over all the files in directory
+                for folderName, subfolders, filenames in os.walk(folderPath):
+                    for filename in filenames:
+                        if not filename == 'results.zip':
+                            filePath = os.path.join(folderName, filename)
+                            # Add file to zip
+                            zipObj.write(filePath, os.path.basename(filePath))
+            zipFile = open('{}/results.zip'.format(folderPath), 'rb')
+            response= HttpResponse(zipFile,content_type='application/zip')
+            response['Content-Disposition'] = 'attachment; filename=results.zip'
+            return response
         else:
-            resutls = "not found"
-        return Response(data=resutls, status=status.HTTP_200_OK)
-
-    def post(self, request, *args, **kwargs):
-        """
-        save results from server to database
-        """
-        project = get_object_or_404(projects, id=kwargs['project_id'])
-        data = request.data
-        if SolverResults.objects.filter(project=project).exists():
-            solverResults = get_object_or_404(SolverResults, project=project)
-            solverResults.result = data
-            solverResults.save()
-        else:
-            SolverResults.objects.create(project=project, result=data)
-
-        return Response(data="results updated", status=status.HTTP_201_CREATED)
+            return Response(data="not found", status=404)
 
 
 class solverProgress(APIView):
     parser_classes = [JSONParser]
+
 
     def get(self, request, *args, **kwargs):
         """

@@ -168,13 +168,13 @@ class mshReader():
         bufferedPoints = copy.deepcopy(self.points)
 
         for face in bufferedFaces.keys():
-            bufferedFaces[face] = [self.nodes[self.connectivity[faceNum][x]-1].tolist()
+            bufferedFaces[face] = [self.nodes[self.connectivity[faceNum-1][x]-1].tolist()
                                    for faceNum in self.faces[face] for x in range(3)]
                                    
             bufferedFaces[face] = list(itr.chain(*bufferedFaces[face]))
 
         for edge in bufferedEdges.keys():
-            bufferedEdges[edge] = [self.nodes[values[x]-1].tolist()
+            bufferedEdges[edge] = [self.nodes[values[x]].tolist()
                                    for values in self.edges[edge] for x in range(2)]
             bufferedEdges[edge] = list(itr.chain(*bufferedEdges[edge]))
 
