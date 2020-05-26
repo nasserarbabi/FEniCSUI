@@ -2,3 +2,4 @@
 media
 changes.md
 *.pyc
+node_modules

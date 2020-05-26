@@ -10,7 +10,7 @@ import sideBarItems from '../menus/sideBarItems';
 import visualizerItems from '../menus/visualizerItems';
 import viewButtons from '../menus/viewButtons';
 
-import { Container, Row, Col, Modal, Button, ProgressBar } from 'react-bootstrap';
+import { Container, Row, Col, Modal, Button, ProgressBar, Alert } from 'react-bootstrap';
 import produce from 'immer';
 import $ from 'jquery';
 
@@ -47,9 +47,11 @@ class App extends React.Component {
       visualizer: visualizerItems,
       viewButtons: viewButtons,
       progress: 0,
-      progressShow: false,
+      solverSubmitted: false,
       modalShow: false,
       bgColor: 0xffffff,
+      error: false,
+      errorMessage: "",
     }
     this.updateConfigFromServer = this.updateConfigFromServer.bind(this)
     this.handleSidebarSubmit = this.handleSidebarSubmit.bind(this);
@@ -57,7 +59,7 @@ class App extends React.Component {
     this.handleViewerClick = this.handleViewerClick.bind(this);
     this.handleSidebarClick = this.handleSidebarClick.bind(this);
     this.handleSidebarSubmitAnalysis = this.handleSidebarSubmitAnalysis.bind(this);
-    this.handleHidingFields = this.handleHidingFields.bind(this);
+    this.handleChangingFields = this.handleChangingFields.bind(this);
     this.addBoundaryCondition = this.addBoundaryCondition.bind(this);
     this.removeBoundaryCondition = this.removeBoundaryCondition.bind(this);
     this.modalAlert = this.modalAlert.bind(this);
@@ -81,22 +83,23 @@ class App extends React.Component {
         datatype: 'json',
         type: 'GET',
         success: (data) => {
-          returnData = data;
+          returnData = JSON.parse(data);
         }
+
       })
     }
     return (
       <>
-        <Modal show={this.state.modalShow} onHide={handleClose} bsPrefix="">
+        <Modal show={this.state.modalShow} onHide={handleClose}>
           <Modal.Header closeButton>
             <Modal.Title>Analysis Summary</Modal.Title>
           </Modal.Header>
-          <Modal.Body>{returnData.config ?
-            Object.keys(returnData.config).map((menu) => (
+          <Modal.Body>
+            {returnData && Object.keys(returnData).map((menu) => (
               <Container key={`summary-item-${menu}`}>
                 <h3 key={`h3-${menu}`}>{menu}</h3>
                 <Row key={`Row-${menu}`}>
-                  {returnData.config[menu].map((item, number) => (
+                  {returnData[menu].map((item, number) => (
                     <Col md="auto" key={`summary-${item.Name}`}>
                       <Button
                         key={`link-to-${item.Name}`}
@@ -112,15 +115,20 @@ class App extends React.Component {
                   ))}
                 </Row>
               </Container>
-            ))
-
-            : null}</Modal.Body>
-            <ProgressBar animated variant={this.state.progress==100?'success':'primary'} now={this.state.progress} />
+            ))}
+          </Modal.Body>
+          <ProgressBar animated variant={this.state.progress == 100 ? 'success' : 'primary'} now={this.state.progress} />
           <Modal.Footer>
             <Button
               variant="danger"
               onClick={this.handleSolverSubmit}>
-              Submit Analysis
+              {this.state.solverSubmitted ? "Kill the analysis" : "Submit Analysis"}
+            </Button>
+            <Button
+              variant="warning"
+              href={`../../../downloadResults/${project}`}
+            >
+              Download Results
             </Button>
             <Button variant="secondary" onClick={handleClose}>
               Close
@@ -131,26 +139,42 @@ class App extends React.Component {
     );
   }
 
-  handleSolverSubmit(){
-    $.ajax({
-      url: `../../../solvers/${project}?solver=elastic`,
-      type: 'GET'
-    });
-
-    const progress = setInterval(() => {
+  handleSolverSubmit() {
+    this.setState({ error: false, errorMessage: "" })
+    if (this.state.solverSubmitted) {
       $.ajax({
-        url: `../../../solverProgress/${project}`,
+        url: `../../../solvers/${project}?solver=navierStokes`,
+        type: 'DELETE',
+      })
+      this.setState({solverSubmitted:false, progress: 0});
+    } else {
+      $.ajax({
+        url: `../../../solvers/${project}?solver=navierStokes`,
         type: 'GET',
-        success: (data) => {
-          console.log(data)
-          this.setState({progress: data.percent})
-          if (data.status === "SUCCESS"){
-            this.setState({progress: 100})
-            clearInterval(progress)
-          }
+        success: () => {
+          this.setState({solverSubmitted:true});
+          const progress = setInterval(() => {
+            $.ajax({
+              url: `../../../solverProgress/${project}`,
+              type: 'GET',
+              success: (data) => {
+                var response = JSON.parse(data)
+                if (response.status === "SUCCESS") {
+                  this.setState({ progress: 100 })
+                  clearInterval(progress)
+                };
+                if (!this.state.modalShow || !this.state.solverSubmitted) clearInterval(progress)
+                this.setState({ progress: response.message.progress })
+              }
+            });
+          }, 5000);
+        },
+        error: (data) => {
+          this.setState({ solverSubmitted:false, error: true, errorMessage: data.responseText, modalShow: false })
         }
       });
-    }, 1000);
+    }
+
 
   }
 
@@ -329,53 +353,21 @@ class App extends React.Component {
   handleSidebarSubmit(formData) {
     let validated = this.sidebarFormValidator(formData);
     if (validated) {
-      if (formData.name === "importGeometry") {
-        // import geometry from OnShape, the setState index for sideBar is [0] 
-        $.ajax({
-          url: `../../../OnShapeImport/${project}`,
-          datatype: 'json',
-          type: 'POST',
-          data: {
-            did: formData.data.input_did.value,
-            wid: formData.data.input_wid.value,
-            eid: formData.data.input_eid.value,
-          },
-
-          success: (data) => {
-
-            this.setState(
-              produce(draft => {
-                draft.visualizer.faces.data = JSON.parse(data.mesh);
-                draft.visualizer.edges.data = JSON.parse(data.edges);
-                draft.visualizer.boundingBox.data = JSON.parse(data.boundingBox);
-                draft.visualizer.faces.visibility = false;
-                draft.visualizer.geometryUpdated = true;
-                draft.visualizer.points.data = [];
-                draft.viewButtons[0].disabled = false;
-                draft.viewButtons[1].disabled = false;
-                draft.viewButtons[2].disabled = false;
-                draft.viewButtons[3].disabled = false;
-              })
-            )
-            this.handleViewerClick("iso");
-          }
-        });
-      }
-
-      else if (formData.name === "uploadStep") {
+      if (formData.name === "uploadStep") {
         // upload Step file
         $.ajax({
-          url: `../../../uploadStep/${project}/stepFile`,
+          url: `../../../uploadStep/${project}/${formData.data.upload.value.name}`,
           processData: false,
           datatype: 'json',
           type: 'POST',
           data: formData.data.upload.value,
           success: (data) => {
+            var response = JSON.parse(data);
             this.setState(
               produce(draft => {
-                draft.visualizer.faces.data = JSON.parse(data).faces;
-                draft.visualizer.edges.data = JSON.parse(data).edges;
-                draft.visualizer.boundingBox.data = JSON.parse(data).boundingBox;
+                draft.visualizer.faces.data = response.faces;
+                draft.visualizer.edges.data = response.edges;
+                draft.visualizer.boundingBox.data = response.boundingBox;
                 draft.visualizer.faces.visibility = false;
                 draft.visualizer.geometryUpdated = true;
                 draft.visualizer.points.data = [];
@@ -386,6 +378,9 @@ class App extends React.Component {
               })
             )
             this.handleViewerClick("iso");
+          },
+          error: (data) => {
+            this.setState({ error: true, errorMessage: data.responseText })
           }
         });
       }
@@ -400,16 +395,20 @@ class App extends React.Component {
           },
 
           success: (data) => {
+            var response = JSON.parse(data);
             this.setState(
               produce(draft => {
                 draft.visualizer.geometryUpdated = true;
                 draft.visualizer.cameraUpdated = false;
-                draft.visualizer.faces.data = JSON.parse(data).faces;
+                draft.visualizer.faces.data = response.faces;
                 draft.visualizer.faces.visibility = true;
-                draft.visualizer.edges.data = JSON.parse(data).edges;
-                draft.visualizer.points.data = JSON.parse(data).points;
+                draft.visualizer.edges.data = response.edges;
+                draft.visualizer.points.data = response.points;
               })
             )
+          },
+          error: (data) => {
+            this.setState({ error: true, errorMessage: data.responseText })
           }
         });
       }
@@ -420,9 +419,17 @@ class App extends React.Component {
           postData[key] = value.value;
         }
         if (this.state.sideBar[formData.name].visualizerSelect === "edges") {
-          postData["edges"] = JSON.stringify(tempBC.edges)
+          if (tempBC.edges.length < 1) {
+            this.setState({ error: true, errorMessage: "please select at least 1 edge" })
+          } else {
+            postData["edges"] = JSON.stringify(tempBC.edges);
+          }
         } else if (this.state.sideBar[formData.name].visualizerSelect === "faces") {
-          postData["faces"] = JSON.stringify(tempBC.faces)
+          if (tempBC.faces.length < 1) {
+            this.setState({ error: true, errorMessage: "please select at least 1 face" })
+          } else {
+            postData["faces"] = JSON.stringify(tempBC.faces);
+          }
         }
 
         $.ajax({
@@ -441,6 +448,9 @@ class App extends React.Component {
                 draft.sideBar[formData.name].cardContent = items
               })
             )
+          },
+          error: (data) => {
+            this.setState({ error: true, errorMessage: data.responseText })
           }
         });
 
@@ -495,16 +505,32 @@ class App extends React.Component {
 
 
 
-  handleHidingFields(event) {
-    // show or hide fields
-    let selected = event.currentTarget.value
-    let condition = JSON.parse(event.currentTarget.getAttribute("hides"))
-    if (condition != null) {
-      if (selected === condition.condition) {
-        document.getElementById(`formGroup-${condition.element}`).style.display = "none";
-      } else {
-        document.getElementById(`formGroup-${condition.element}`).style.display = "block";
-      }
+  handleChangingFields(event) {
+    // change other fields based on selection
+    let selected = event.currentTarget.value;
+    let fieldChange = JSON.parse(event.currentTarget.getAttribute("fieldChange"));
+    var changeInstruction = fieldChange.filter((condition) => condition.selectedField === selected)[0];
+    var target = document.getElementById(`formGroup-${changeInstruction.targetId}`);
+    target.children[1].value = "";
+    var formName = target.parentElement.name;
+    if (changeInstruction.changingfields === "hide") {
+      target.style.display = "none";
+    } else {
+      target.style.display = "block";
+      // var form = this.state.sideBar[formName].form.filter((targetElement)=> targetElement.id == changeInstruction.targetId)[0];
+      this.setState(
+        produce(draft => {
+          var form = draft.sideBar[formName].form;
+          form.forEach((item, num) => {
+            if (item.id === changeInstruction.targetId) {
+              changeInstruction.changingfields.forEach((field, index) => {
+                draft.sideBar[formName].form[num][field] = changeInstruction.changeTo[index];
+              })
+            }
+          })
+
+        })
+      )
     }
   }
 
@@ -841,11 +867,17 @@ class App extends React.Component {
                 sideBarItems={this.state.sideBar}
                 sideBarEdit={this.state.sideBarEdit}
                 handleSidebarClick={this.handleSidebarClick}
-                handleHidingFields={this.handleHidingFields}
+                handleChangingFields={this.handleChangingFields}
                 submitAnalysis={this.handleSidebarSubmitAnalysis}
                 handleSideBarRemoveFromCard={this.handleSideBarRemoveFromCard}
                 handleSideBarEdit={this.handleSideBarEdit}
               />
+              <Alert show={this.state.error} variant="danger" onClose={() => this.setState({ error: false })} dismissible>
+                <Alert.Heading>Error!</Alert.Heading>
+                <p>
+                  {this.state.errorMessage}
+                </p>
+              </Alert>
             </Col>
             <Col xs={9} key="viewer">
               <div style={{ position: "relative", textAlign: "center" }}>

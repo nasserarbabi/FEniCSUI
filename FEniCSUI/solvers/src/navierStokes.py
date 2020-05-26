@@ -55,14 +55,14 @@ def navierStokes(projectId, mesh, faceSets, boundarySets, config):
                 bcs.append(fn.DirichletBC(W.sub(0), fn.Constant(
                     (0.0, 0.0, 0.0)), boundarySets, int(edge), method='topological'))
         if BC["boundaryType"] == "inlet":
-            vel = json.loads(BC['vel'])
+            vel = json.loads(BC['value'])
             for edge in json.loads(BC["edges"]):
                 bcs.append(fn.DirichletBC(W.sub(0), fn.Expression(
                     (str(vel[0]), str(vel[1]), str(vel[2])), degree=2), boundarySets, int(edge), method='topological'))
         if BC["boundaryType"] == "outlet":
             for edge in json.loads(BC["edges"]):
                 bcs.append(fn.DirichletBC(W.sub(1), fn.Constant(
-                    float(BC['pressure'])), boundarySets, int(edge), method='topological'))
+                    float(BC['value'])), boundarySets, int(edge), method='topological'))
 
     # print(bcs[0].get_boundary_values())
 
@@ -101,7 +101,7 @@ def navierStokes(projectId, mesh, faceSets, boundarySets, config):
             sendFile(projectId, resultDir+"vel.h5")
             sendFile(projectId, resultDir+"pressure.xdmf")
             sendFile(projectId, resultDir+"pressure.h5")
-            statusUpdate(projectId, "STARTED", json.dumps({"progress":"{}%".format(jj/t_num*100)}))
+            statusUpdate(projectId, "STARTED", {"progress":jj/t_num*100})
 
 
 if __name__ == "__main__":

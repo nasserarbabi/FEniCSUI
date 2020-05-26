@@ -60,7 +60,6 @@ class SideBar extends React.Component {
                 <Popover.Title as="h3">{label}</Popover.Title>
                 <Popover.Content>
                     <Form name={name} onSubmit={this.handleSubmit}>
-                        <div>
                             {form.map((input) => (
                                 <Form.Group id={`formGroup-${input.id}`} key={`formGroup-${name}-${input.id}`}>
                                     <Form.Label>{input.label}</Form.Label>
@@ -73,8 +72,8 @@ class SideBar extends React.Component {
                                         placeholder={input.placeholder}
                                         isInvalid={input.isInvalid}
                                         validation={JSON.stringify(input.validation)}
-                                        onChange={this.props.handleHidingFields}
-                                        hides={JSON.stringify(input.hides)}
+                                        onChange={input.fieldChange!=null&&this.props.handleChangingFields}
+                                        fieldChange={JSON.stringify(input.fieldChange)}
                                     >
                                         {input.type == "select" ?
                                             input.formOptions.map((option) => (
@@ -96,7 +95,6 @@ class SideBar extends React.Component {
                                 </Form.Group>
                             ))
                             }
-                        </div>
                         {Array.isArray(formButtons) ? (
                             <ButtonToolbar>
                                 {formButtons.map((button) => (
@@ -217,11 +215,13 @@ class SideBar extends React.Component {
                         )}
                         <br />
                         <div className="text-center">
+                            <a className="btn btn-danger mb-1" href="../../dashboard">Go to dashboard</a>
                             <Button
-                                style={{ marginBottom: "15px" }}
                                 key="submitAnalysis"
                                 variant="warning"
-                                onClick={this.props.submitAnalysis}>Submit Analysis</Button>
+                                className="mb-1"
+                                onClick={this.props.submitAnalysis}>Submit Analysis
+                            </Button>
                         </div>
                     </Col>
                 </Row>

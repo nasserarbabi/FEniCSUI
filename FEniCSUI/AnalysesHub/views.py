@@ -172,7 +172,7 @@ class solvers(APIView):
         project = get_object_or_404(projects, id=kwargs['project_id'])
         # set progress to initial
         progress = get_object_or_404(SolverProgress, project=project)
-        progress.progress = {'status': 'RECEIVED', 'percent': '0'}
+        progress.progress = json.dumps({"status": "RECEIVED", "message": {"progress": "0.0"}})
         progress.save()
 
         # initiate related solver
@@ -194,6 +194,7 @@ class solvers(APIView):
                 detach=True)
         except:
             message = '''please check if the docker is running, and if a container with the name FEniCSDocker does not exist.
+            if you are using docker windows, make sure the file sharing setting for the main folder directory is on.
              If you are woking with WSL, make sure it has access to the windows docker. 
              Instructions can be found at: https://nickjanetakis.com/blog/setting-up-docker-for-windows-and-wsl-to-work-flawlessly'''
             print(message)
@@ -287,7 +288,7 @@ class solverProgress(APIView):
         data = request.data
         if SolverProgress.objects.filter(project=project).exists():
             progress = get_object_or_404(SolverProgress, project=project)
-            progress.progress = data
+            progress.progress = json.dumps(data)
             progress.save()
         else:
             SolverProgress.objects.create(project=project, progress=data)
