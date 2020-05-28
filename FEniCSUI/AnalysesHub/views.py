@@ -2,18 +2,17 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from dashboard.models import projects
-from .models import AnalysisConfig, SolverResults, SolverProgress
+from .models import AnalysisConfig, SolverResults, SolverProgress, DockerLogs
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser, FileUploadParser
-from rest_framework.renderers import JSONRenderer
 from rest_framework import status
 import docker
 import os
-from base64 import b64encode
 import json
 from zipfile import ZipFile
 from django.http import HttpResponse
-from wsgiref.util import FileWrapper
-
+from threading import Thread
+from time import sleep
+from datetime import datetime
 
 class solverConfig(APIView):
 
@@ -160,6 +159,16 @@ class getConfiguration(APIView):
         return Response(data=config["config"], status=status.HTTP_200_OK)
 
 
+def streamDockerLog(container, project):
+    for line in container.logs(stream=True):
+        logs = get_object_or_404(DockerLogs, project=project)
+        now = datetime.now()
+        current_time = now.strftime("[%H:%M:%S]:  ")
+        logs.log = logs.log +"\n"+ current_time + str(line.strip(), 'utf-8')
+        logs.save()
+
+
+
 class solvers(APIView):
 
     parser_classes = [FormParser, MultiPartParser]
@@ -180,8 +189,11 @@ class solvers(APIView):
 
         client = docker.from_env()
         solverPath = os.path.abspath('./solvers')
+        if DockerLogs.objects.filter(project=project).exists():
+            DockerLogs.objects.filter(project=project).delete()
+        DockerLogs.objects.create(project=project,log="")
         try:
-            client.containers.run(
+            container = client.containers.run(
                 "quay.io/fenicsproject/stable:current",
                 volumes={solverPath: {
                     'bind': '/home/fenics/shared', 'mode': 'rw'}},
@@ -192,6 +204,8 @@ class solvers(APIView):
                 name="FEniCSDocker",
                 auto_remove=True,
                 detach=True)
+            thread = Thread(target=streamDockerLog, args=(container, project))
+            thread.start()
         except:
             message = '''please check if the docker is running, and if a container with the name FEniCSDocker does not exist.
             if you are using docker windows, make sure the file sharing setting for the main folder directory is on.
@@ -275,10 +289,12 @@ class solverProgress(APIView):
         """
         project = get_object_or_404(projects, id=kwargs['project_id'])
         if (SolverProgress.objects.filter(project=project).exists()):
-            progress = get_object_or_404(SolverProgress, project=project)
+            progress = json.loads(get_object_or_404(SolverProgress, project=project).progress)
+            logs = get_object_or_404(DockerLogs, project=project).log
         else:
-            progress = "no solver has been started yet"
-        return Response(data=progress.progress, status=status.HTTP_200_OK)
+            progress = "null"
+            logs=""
+        return Response(data=json.dumps({"state":progress,"logs":logs}), status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         """

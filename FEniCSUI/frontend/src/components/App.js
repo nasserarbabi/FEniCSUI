@@ -10,7 +10,7 @@ import sideBarItems from '../menus/sideBarItems';
 import visualizerItems from '../menus/visualizerItems';
 import viewButtons from '../menus/viewButtons';
 
-import { Container, Row, Col, Modal, Button, ProgressBar, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Modal, Button, ProgressBar, Alert, Form } from 'react-bootstrap';
 import produce from 'immer';
 import $ from 'jquery';
 
@@ -52,6 +52,7 @@ class App extends React.Component {
       bgColor: 0xffffff,
       error: false,
       errorMessage: "",
+      dockerLogs:"",
     }
     this.updateConfigFromServer = this.updateConfigFromServer.bind(this)
     this.handleSidebarSubmit = this.handleSidebarSubmit.bind(this);
@@ -90,7 +91,7 @@ class App extends React.Component {
     }
     return (
       <>
-        <Modal show={this.state.modalShow} onHide={handleClose}>
+        <Modal show={this.state.modalShow} onHide={handleClose} size="lg">
           <Modal.Header closeButton>
             <Modal.Title>Analysis Summary</Modal.Title>
           </Modal.Header>
@@ -118,6 +119,10 @@ class App extends React.Component {
             ))}
           </Modal.Body>
           <ProgressBar animated variant={this.state.progress == 100 ? 'success' : 'primary'} now={this.state.progress} />
+          <Form.Group controlId="dockerLog">
+            <Form.Label className="font-weight-bold">Docker container log:</Form.Label>
+                      <Form.Control as="textarea" rows="8" value={this.state.dockerLogs}></Form.Control>
+          </Form.Group>
           <Modal.Footer>
             <Button
               variant="danger"
@@ -140,13 +145,13 @@ class App extends React.Component {
   }
 
   handleSolverSubmit() {
-    this.setState({ error: false, errorMessage: "" })
+    this.setState({ error: false, errorMessage: "", dockerLogs:"Analysis submitted" })
     if (this.state.solverSubmitted) {
       $.ajax({
         url: `../../../solvers/${project}?solver=navierStokes`,
         type: 'DELETE',
       })
-      this.setState({solverSubmitted:false, progress: 0});
+      this.setState({solverSubmitted:false, progress: 0, dockerLogs:this.state.dockerLogs + "\r\n"+"Solver killed"});
     } else {
       $.ajax({
         url: `../../../solvers/${project}?solver=navierStokes`,
@@ -159,12 +164,12 @@ class App extends React.Component {
               type: 'GET',
               success: (data) => {
                 var response = JSON.parse(data)
-                if (response.status === "SUCCESS") {
+                if (response.state.status === "SUCCESS") {
                   this.setState({ progress: 100 })
                   clearInterval(progress)
                 };
-                if (!this.state.modalShow || !this.state.solverSubmitted) clearInterval(progress)
-                this.setState({ progress: response.message.progress })
+                if (!this.state.solverSubmitted) clearInterval(progress)
+                this.setState({ progress: response.state.message.progress, dockerLogs:response.logs })
               }
             });
           }, 5000);
@@ -782,6 +787,21 @@ class App extends React.Component {
       }
 
     }
+    // check if a solver is running
+    $.ajax({
+      url: `../../../solverProgress/${project}`,
+      type: 'GET',
+      success: (data) => {
+        var response = JSON.parse(data)
+        if (response.state.status !== "null") {
+          this.setState({ progress: response.state.message.progress, dockerLogs:response.logs })
+          if (response.state.status !== "SUCCESS") {
+            this.setState({solverSubmitted:true})
+          }
+        }
+      }
+    });
+
   }
 
   getGeometryIfExists() {
@@ -853,6 +873,7 @@ class App extends React.Component {
     this.getGeometryIfExists()
     this.updateConfigFromServer()
     this.getOptions()
+
   }
 
   render() {

@@ -36,3 +36,13 @@ class SolverProgress(models.Model):
 
     def __str__(self):
         return self.project.name
+
+class DockerLogs(models.Model):
+    project = models.OneToOneField(
+    projects,
+    on_delete=models.CASCADE,
+    primary_key=True)
+    log = models.TextField()
+
+    def __str__(self):
+        return self.project.name
