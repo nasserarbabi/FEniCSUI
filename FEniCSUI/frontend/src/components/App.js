@@ -121,11 +121,11 @@ class App extends React.Component {
           <ProgressBar animated variant={this.state.progress == 100 ? 'success' : 'primary'} now={this.state.progress} />
           <Form.Group controlId="dockerLog">
             <Form.Label className="font-weight-bold">Docker container log:</Form.Label>
-                      <Form.Control as="textarea" rows="8" value={this.state.dockerLogs}></Form.Control>
+                      <Form.Control id="dockerLogger" as="textarea" rows="8" value={this.state.dockerLogs}></Form.Control>
           </Form.Group>
           <Modal.Footer>
             <Button
-              variant="danger"
+              variant={this.state.solverSubmitted ?"danger":"primary"}
               onClick={this.handleSolverSubmit}>
               {this.state.solverSubmitted ? "Kill the analysis" : "Submit Analysis"}
             </Button>
@@ -169,7 +169,7 @@ class App extends React.Component {
                   clearInterval(progress)
                 };
                 if (!this.state.solverSubmitted) clearInterval(progress)
-                this.setState({ progress: response.state.message.progress, dockerLogs:response.logs })
+                this.setState({ progress: response.state.message.progress, dockerLogs:response.logs });
               }
             });
           }, 5000);

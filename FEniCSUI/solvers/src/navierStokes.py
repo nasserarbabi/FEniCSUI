@@ -1,8 +1,16 @@
 import fenics as fn
 import json
 from .statusTools import statusUpdate, sendFile
+import sys
+
+#  use log to print data to docker logs, this will show up in logging area in the front end
+def log(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs, flush=True)
 
 def navierStokes(projectId, mesh, faceSets, boundarySets, config):
+
+    log("Navier Stokes Analysis has started")
+    
 
     resultDir = "./Results/"
     if len(config["steps"]) > 1:
@@ -102,7 +110,6 @@ def navierStokes(projectId, mesh, faceSets, boundarySets, config):
             sendFile(projectId, resultDir+"pressure.xdmf")
             sendFile(projectId, resultDir+"pressure.h5")
             statusUpdate(projectId, "STARTED", {"progress":jj/t_num*100})
-
 
 if __name__ == "__main__":
     import os

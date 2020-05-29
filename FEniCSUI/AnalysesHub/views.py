@@ -158,15 +158,13 @@ class getConfiguration(APIView):
         config = AnalysisConfig.objects.filter(project=project).values()[0]
         return Response(data=config["config"], status=status.HTTP_200_OK)
 
-
 def streamDockerLog(container, project):
     for line in container.logs(stream=True):
         logs = get_object_or_404(DockerLogs, project=project)
         now = datetime.now()
         current_time = now.strftime("[%H:%M:%S]:  ")
-        logs.log = logs.log +"\n"+ current_time + str(line.strip(), 'utf-8')
+        logs.log = current_time + str(line.strip(), 'utf-8') + "\n" + logs.log
         logs.save()
-
 
 
 class solvers(APIView):
@@ -199,7 +197,7 @@ class solvers(APIView):
                     'bind': '/home/fenics/shared', 'mode': 'rw'}},
                 working_dir="/home/fenics/shared",
                 # runs solver.py with two arguments to be passed in to python file
-                command=["`sudo pip3 install requests \npython3 solverHub.py {} {}`".format(
+                command=["`sudo pip3 install requests \n python3 solverHub.py {} {}`".format(
                     project.id, solver)],
                 name="FEniCSDocker",
                 auto_remove=True,
