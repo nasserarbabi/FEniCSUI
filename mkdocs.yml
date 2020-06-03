@@ -1,0 +1,9 @@
+site_name: FEniCSUI documentaitons
+
+
+nav:
+    - Home: index.md
+    - Quick Start: quickStart.md
+    - About: about.md
+
+theme: readthedocs
