@@ -1,15 +1,18 @@
 # FEniCSUI documentation
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+FEniCSUI is a library to build powerful user interfaces for FEniCS solvers. It provides a web interface consist of a 3D interactive CAD viewer to view and examine the geometry and a working tree to  provide the parameters necessary for running the solver.
 
 ## Quick start:
-Currently the FEniCSUI is available for ubuntu users. Windows users can use [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10) (WSL) to run the code in the windows environment. The following installation instructions are based on Ubuntu 18 or WSL 1.
+
+FEniCSUI is based on python, docker, and gmsh, all of which are available for Windows/Mac/ Windows systems, so theoretically, it is compatible with all operating systems given that the required version of the prerequisite libraries are installed. However, the following instructions are for Ubuntu 18.
+
+Windows users can use [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10) (WSL) to run the code in the windows environment. 
 
 ##### 1. Docker:
 
-The solver uses the docker image of FEniCS project to run the finite element code. So, the docker should be installed and running in your system. 
+The solver uses the docker image of FEniCS project to run the finite element code. This requires the docker to be installed and running in your system. 
 
-If you are using WSL services, [here](https://nickjanetakis.com/blog/setting-up-docker-for-windows-and-wsl-to-work-flawlessly) is a comprehensive guide on how to use windows docker inside wsl 1.
+If you are using WSL services, [here](https://nickjanetakis.com/blog/setting-up-docker-for-windows-and-wsl-to-work-flawlessly) is a comprehensive guide on how to use windows docker inside WSL 1.
 
 If you have already had docker installed and running, skip to the **step 2**!
 
@@ -45,13 +48,17 @@ docker-compose --version
 # you should get back your docker compose version
 ```
 
+For instructions on installing docker for other operating systems, please refer to the [docker's official documentations](https://www.docker.com/get-started)
+
 ##### 2. gmsh:
 
-We use gmsh to mesh the uploaded geometry (Step format supported). We use [pygmsh](https://pypi.org/project/pygmsh/) to call gmsh commands from web server backend, however, it requires the C++ libraries of gmsh to be installed on the system. The current mesh converters are based on gmsh version 3.0.6, which can be installed by:
+gmsh is a powerful library to generate mesh suitable for finite element analysis. We use [pygmsh](https://pypi.org/project/pygmsh/) to call gmsh commands from web server backend, however, it requires gmsh to be installed on the system. The current mesh converters are based on gmsh version 3.0.6, which can be installed by:
 
 ```bash
 sudo apt-get install -y gmsh=3.0.6+dfsg1-1
 ```
+
+For installation on other operating systems, please refer to the [Gmsh's official documentations](https://gmsh.info/). A list of binaries of all versions are available from [here](https://gmsh.info/bin/).
 
 ##### 3. python environment and dependencies
 
@@ -100,4 +107,10 @@ python manage.py runserver
 
 Go to `localhost:8000` in your web browser. 
 
+# Table of Contents:
 
+- [Tutorial](tutorial.md)
+- [Solvers](solvers.md)
+- [Back-end API Guide](backendAPI.md)
+- [Front-end API Guide](frontEndAPI.md)
+- [About](about.md)

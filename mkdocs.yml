@@ -3,7 +3,10 @@ site_name: FEniCSUI documentaitons
 
 nav:
     - Home: index.md
-    - Quick Start: quickStart.md
+    - Tutorial: tutorial.md
+    - Solvers: solvers.md
+    - Back-end API Guide: backendAPI.md
+    - Front-end API Guide: frontEndAPI.md
     - About: about.md
 
 theme: readthedocs

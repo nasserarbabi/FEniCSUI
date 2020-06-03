@@ -1,7 +1,7 @@
 # FEniCSUI
 A flexible web based user interface for FEniCS (finite element) solvers using Django local server and react application as front end. Once up and running, a 
 
-- [Documentation](FEniCSUI.com)
+- [Documentation](https://fenicsui.readthedocs.io/en/latest/)
 
 ## Getting started:
 
