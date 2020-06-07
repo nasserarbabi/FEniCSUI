@@ -203,7 +203,7 @@ class solvers(APIView):
                 command=["`sudo pip3 install requests \n python3 solverHub.py {} {}`".format(
                     project.id, solver)],
                 name="FEniCSDocker",
-                auto_remove=False,
+                auto_remove=Ture,
                 detach=True)
             thread = Thread(target=streamDockerLog, args=(container, project))
             thread.start()
