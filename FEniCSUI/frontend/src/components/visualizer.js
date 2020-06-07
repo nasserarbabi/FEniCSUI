@@ -375,12 +375,12 @@ class ThreeJSViewer extends React.Component {
       this.delete3DOBJ("meshwWireframe");
       faces = new THREE.Object3D();
       var meshwWireframe = new THREE.Object3D();
-      Object.keys(faceData.data).forEach(function (faceName) {
+      Object.keys(faceData.data).forEach((faceName)=> {
         var faceGeometry = new THREE.BufferGeometry();
         faceGeometry.setAttribute('position', new THREE.Float32BufferAttribute(faceData.data[faceName], 3));
 
         // show mesh edges if required
-        if (faceData.visibility) {
+        if (this.props.meshView) {
           var faceWireframeMaterial = new THREE.MeshBasicMaterial({
             color: 0x000000,
             side: THREE.DoubleSide,

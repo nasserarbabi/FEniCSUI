@@ -15,7 +15,6 @@ import {
 } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import * as icons from '@fortawesome/free-solid-svg-icons'
-import Logo from '../icons/logo'
 
 class SideBar extends React.Component {
     /*
@@ -23,7 +22,7 @@ class SideBar extends React.Component {
     */
     constructor(props) {
         super(props);
-        this.overlay = this.overlay.bind(this);
+        this.popover = this.popover.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 
@@ -47,12 +46,13 @@ class SideBar extends React.Component {
                 validation: JSON.parse(validation)
             };
         }
-        this.props.handleSidebarSubmit(data)
+        this.props.handleSidebarSubmit(data);
+        event.target.reset();
     }
 
 
     // define the content shown in popover
-    overlay(name, label, form, formButtons) {
+    popover(name, label, form, formButtons) {
         return (
             <Popover
                 key={`popover-${name}`}
@@ -72,8 +72,8 @@ class SideBar extends React.Component {
                                         placeholder={input.placeholder}
                                         isInvalid={input.isInvalid}
                                         validation={JSON.stringify(input.validation)}
-                                        onChange={input.fieldChange!=null&&this.props.handleChangingFields}
-                                        fieldChange={JSON.stringify(input.fieldChange)}
+                                        onChange={input.fieldChange!=null?this.props.handleChangingFields:undefined}
+                                        fieldchange={JSON.stringify(input.fieldChange)}
                                     >
                                         {input.type == "select" ?
                                             input.formOptions.map((option) => (
@@ -122,15 +122,17 @@ class SideBar extends React.Component {
 
     render() {
         // drop down menu behavior
-        function CustomToggle({ children, eventKey }) {
+        function CustomToggle({ children, eventKey, disabled }) {
             const decoratedOnClick = useAccordionToggle(eventKey);
             return (
                 <Button
+                    disabled={disabled}
                     variant="sideBar text-left"
                     key={name}
                     style={{ width: "95%" }}
                     onClick={decoratedOnClick}>
-                    {children}</Button>
+                    {children}
+                    </Button>
             );
         }
 
@@ -148,14 +150,16 @@ class SideBar extends React.Component {
                                         key={`buttonGroup-${menu}`}
                                         bsPrefix="d-flex" >
                                             
-                                            {/* drop down menu for tree */}
+                                        {/* drop down menu for tree */}
                                         <CustomToggle
+                                            disabled={menu!="uploadStep"?this.props.disabled:false}
                                             eventKey={`toggle-${menu}`}>
                                             <FontAwesomeIcon icon={icons[item.icon]} />&nbsp;&nbsp;{item.label}
                                         </CustomToggle>
 
                                         {/* popover > button */}
                                         <Button
+                                            disabled={menu!="uploadStep"?this.props.disabled:false}
                                             variant="sideBar text-left"
                                             key={`popover-${menu}`}
                                             visualizerselect={item.visualizerSelect}
@@ -171,7 +175,7 @@ class SideBar extends React.Component {
                                             key={menu}
                                             placement="right"
                                             transition>
-                                            {this.overlay(menu, item.label, item.form, item.formButtons)}
+                                            {this.popover(menu, item.label, item.form, item.formButtons)}
                                         </Overlay>
 
                                     </ButtonGroup>
@@ -215,11 +219,12 @@ class SideBar extends React.Component {
                         )}
                         <br />
                         <div className="text-center">
-                            <a className="btn btn-danger mb-1" href="../../dashboard">Go to dashboard</a>
+                            <a className="btn btn-primary mb-1" href="../../dashboard">Go to dashboard</a>
                             <Button
                                 key="submitAnalysis"
                                 variant="warning"
                                 className="mb-1"
+                                disabled={this.props.disabled}
                                 onClick={this.props.submitAnalysis}>Submit Analysis
                             </Button>
                         </div>

@@ -12,10 +12,13 @@ def navierStokes(projectId, mesh, faceSets, boundarySets, config):
     log("Navier Stokes Analysis has started")
     
 
-    resultDir = "./Results/"
+    # this is the default directory, when user request for download all files in this directory is being compressed and sent to the user
+    resultDir = "./Results/" 
+    
     if len(config["steps"]) > 1:
         return "more than 1 step is not supported yet"
 
+    # config is a dictionary containing all the user inputs for solver configurations
     t_init = 0.0
     t_final = float(config['steps'][0]["finalTime"])
     t_num = int(config['steps'][0]["iterationNo"])
@@ -26,6 +29,7 @@ def navierStokes(projectId, mesh, faceSets, boundarySets, config):
     #  Viscosity coefficient.
     #
     nu = float(config['materials'][0]["viscosity"])
+    rho = float(config['materials'][0]["density"])
 
     #
     #  Declare Finite Element Spaces
@@ -72,7 +76,6 @@ def navierStokes(projectId, mesh, faceSets, boundarySets, config):
                 bcs.append(fn.DirichletBC(W.sub(1), fn.Constant(
                     float(BC['value'])), boundarySets, int(edge), method='topological'))
 
-    # print(bcs[0].get_boundary_values())
 
     f = fn.Constant((0.0, 0.0, 0.0))
     #  weak form NSE

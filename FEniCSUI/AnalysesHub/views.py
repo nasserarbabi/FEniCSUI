@@ -178,8 +178,11 @@ class solvers(APIView):
         """
         project = get_object_or_404(projects, id=kwargs['project_id'])
         # set progress to initial
-        progress = get_object_or_404(SolverProgress, project=project)
-        progress.progress = json.dumps({"status": "RECEIVED", "message": {"progress": "0.0"}})
+        SolverProgress.objects.get_or_create(
+			project=project, 
+			defaults={'progress' :json.dumps({"status": "", "message": ""})})
+        progress = SolverProgress.objects.get( project=project )
+        progress.progress = json.dumps({"state":{"status": "RECEIVED", "message": {"progress": "0.0"}}, "logs":""})
         progress.save()
 
         # initiate related solver
@@ -196,11 +199,11 @@ class solvers(APIView):
                 volumes={solverPath: {
                     'bind': '/home/fenics/shared', 'mode': 'rw'}},
                 working_dir="/home/fenics/shared",
-                # runs solver.py with two arguments to be passed in to python file
+                runs solver.py with two arguments to be passed in to python file
                 command=["`sudo pip3 install requests \n python3 solverHub.py {} {}`".format(
                     project.id, solver)],
                 name="FEniCSDocker",
-                auto_remove=True,
+                auto_remove=False,
                 detach=True)
             thread = Thread(target=streamDockerLog, args=(container, project))
             thread.start()

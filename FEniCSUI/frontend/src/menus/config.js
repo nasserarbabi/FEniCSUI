@@ -1,3 +1,6 @@
+// define the solver, please input a solver file name in /solvers/src folder.
+// just the file name, do not enter the .py extension
+const solver = 'navierStokes'
 // define the solver configuration
 const config =
 {
@@ -25,6 +28,16 @@ const config =
         isInvalid: false,
         invalidFeedback: "Please enter viscosity in the range of 0.0001 to 1e5",
         validation: { characterLength: null, minValue: 0.0001, maxValue: 1e5, required: true }
+      },
+      {
+        id: "density",
+        as: "input",
+        label: "Density:",
+        placeholder: "1",
+        default: "",
+        isInvalid: false,
+        invalidFeedback: "Please enter density in the range of 1 to 1e5",
+        validation: { characterLength: null, minValue: 1, maxValue: 1e5, required: true }
       }
     ],
     formButtons: [
@@ -187,4 +200,4 @@ const config =
 
 };
 
-export default config;
+export {config, solver};

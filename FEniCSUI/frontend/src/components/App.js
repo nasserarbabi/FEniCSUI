@@ -8,7 +8,7 @@ import ViewButtons from './viewButtons';
 // import initial state
 import sideBarItems from '../menus/sideBarItems';
 import visualizerItems from '../menus/visualizerItems';
-import viewButtons from '../menus/viewButtons';
+import {solver} from '../menus/config';
 
 import { Container, Row, Col, Modal, Button, ProgressBar, Alert, Form } from 'react-bootstrap';
 import produce from 'immer';
@@ -41,15 +41,26 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+
+      // side bar states
       sideBar: sideBarItems,
       sideBarEdit: false,
       sideBarEditId: null,
+
+      // view navbar states
+      viewButtonsDisabled: true,
+      faceSelect:false,
+      edgeSelect:false,
+      meshView: false,
+
+      // visualizer states
       visualizer: visualizerItems,
-      viewButtons: viewButtons,
+      bgColor: 0xffffff,
+
+      // solver states
       progress: 0,
       solverSubmitted: false,
       modalShow: false,
-      bgColor: 0xffffff,
       error: false,
       errorMessage: "",
       dockerLogs:"",
@@ -119,9 +130,9 @@ class App extends React.Component {
             ))}
           </Modal.Body>
           <ProgressBar animated variant={this.state.progress == 100 ? 'success' : 'primary'} now={this.state.progress} />
-          <Form.Group controlId="dockerLog">
+          <Form.Group>
             <Form.Label className="font-weight-bold">Docker container log:</Form.Label>
-                      <Form.Control id="dockerLogger" as="textarea" rows="8" value={this.state.dockerLogs}></Form.Control>
+                      <Form.Control id="dockerLogger" as="textarea" rows="8" value={this.state.dockerLogs} readOnly></Form.Control>
           </Form.Group>
           <Modal.Footer>
             <Button
@@ -148,13 +159,13 @@ class App extends React.Component {
     this.setState({ error: false, errorMessage: "", dockerLogs:"Analysis submitted" })
     if (this.state.solverSubmitted) {
       $.ajax({
-        url: `../../../solvers/${project}?solver=navierStokes`,
+        url: `../../../solvers/${project}?solver=${solver}`,
         type: 'DELETE',
       })
       this.setState({solverSubmitted:false, progress: 0, dockerLogs:this.state.dockerLogs + "\r\n"+"Solver killed"});
     } else {
       $.ajax({
-        url: `../../../solvers/${project}?solver=navierStokes`,
+        url: `../../../solvers/${project}?solver=${solver}`,
         type: 'GET',
         success: () => {
           this.setState({solverSubmitted:true});
@@ -299,19 +310,19 @@ class App extends React.Component {
 
     // toggle edge selection
     if (activateVisualizerSelect === 'edges') {
-      if (!this.state.viewButtons[3].checked) {
+      if (!this.state.edgeSelect) {
         this.handleViewerClick("edgeSelect");
       }
       // toggle face selection
     } else if (activateVisualizerSelect === 'faces') {
-      if (!this.state.viewButtons[2].checked) {
+      if (!this.state.faceSelect) {
         this.handleViewerClick("faceSelect");
       }
     } else {
-      if (this.state.viewButtons[2].checked) {
+      if (this.state.faceSelect) {
         this.handleViewerClick("faceSelect");
       };
-      if (this.state.viewButtons[3].checked) {
+      if (this.state.edgeSelect) {
         this.handleViewerClick("edgeSelect");
       };
     }
@@ -361,7 +372,7 @@ class App extends React.Component {
       if (formData.name === "uploadStep") {
         // upload Step file
         $.ajax({
-          url: `../../../uploadStep/${project}/${formData.data.upload.value.name}`,
+          url: `../../../uploadStep/${project}/${formData.data.upload.value.name.split(".")[0]}`,
           processData: false,
           datatype: 'json',
           type: 'POST',
@@ -373,13 +384,10 @@ class App extends React.Component {
                 draft.visualizer.faces.data = response.faces;
                 draft.visualizer.edges.data = response.edges;
                 draft.visualizer.boundingBox.data = response.boundingBox;
-                draft.visualizer.faces.visibility = false;
                 draft.visualizer.geometryUpdated = true;
                 draft.visualizer.points.data = [];
-                draft.viewButtons[0].disabled = false;
-                draft.viewButtons[1].disabled = false;
-                draft.viewButtons[2].disabled = false;
-                draft.viewButtons[3].disabled = false;
+                draft.viewButtonsDisabled = false;
+                draft.meshView = false;
               })
             )
             this.handleViewerClick("iso");
@@ -406,9 +414,9 @@ class App extends React.Component {
                 draft.visualizer.geometryUpdated = true;
                 draft.visualizer.cameraUpdated = false;
                 draft.visualizer.faces.data = response.faces;
-                draft.visualizer.faces.visibility = true;
                 draft.visualizer.edges.data = response.edges;
                 draft.visualizer.points.data = response.points;
+                draft.meshView = true;
               })
             )
           },
@@ -425,13 +433,15 @@ class App extends React.Component {
         }
         if (this.state.sideBar[formData.name].visualizerSelect === "edges") {
           if (tempBC.edges.length < 1) {
-            this.setState({ error: true, errorMessage: "please select at least 1 edge" })
+            this.setState({ error: true, errorMessage: "please select at least 1 edge" });
+            return
           } else {
             postData["edges"] = JSON.stringify(tempBC.edges);
           }
         } else if (this.state.sideBar[formData.name].visualizerSelect === "faces") {
           if (tempBC.faces.length < 1) {
-            this.setState({ error: true, errorMessage: "please select at least 1 face" })
+            this.setState({ error: true, errorMessage: "please select at least 1 face" });
+            return
           } else {
             postData["faces"] = JSON.stringify(tempBC.faces);
           }
@@ -450,7 +460,8 @@ class App extends React.Component {
             }) : null;
             this.setState(
               produce(draft => {
-                draft.sideBar[formData.name].cardContent = items
+                draft.sideBar[formData.name].cardContent = items;
+                draft.sideBar[formData.name].cardShow = true;
               })
             )
           },
@@ -513,7 +524,7 @@ class App extends React.Component {
   handleChangingFields(event) {
     // change other fields based on selection
     let selected = event.currentTarget.value;
-    let fieldChange = JSON.parse(event.currentTarget.getAttribute("fieldChange"));
+    let fieldChange = JSON.parse(event.currentTarget.getAttribute("fieldchange"));
     var changeInstruction = fieldChange.filter((condition) => condition.selectedField === selected)[0];
     var target = document.getElementById(`formGroup-${changeInstruction.targetId}`);
     target.children[1].value = "";
@@ -679,13 +690,13 @@ class App extends React.Component {
         break;
 
       case "faceSelect":
-        var faceSelectStatus = this.state.viewButtons[2].checked;
+        var faceSelectStatus = this.state.faceSelect;
         this.setState(
           produce(draft => {
             draft.visualizer.geometryUpdated = false;
             draft.visualizer.cameraUpdated = false;
-            draft.viewButtons[2].checked = !faceSelectStatus;
-            draft.viewButtons[3].checked = false;
+            draft.faceSelect = !faceSelectStatus;
+            draft.edgeSelect = false;
             draft.visualizer.select.enabled = !faceSelectStatus;
             draft.visualizer.select.type = !faceSelectStatus ? "face" : null;
           })
@@ -693,15 +704,25 @@ class App extends React.Component {
         break;
 
       case "edgeSelect":
-        var edgeSelectStatus = this.state.viewButtons[3].checked;
+        var edgeSelectStatus = this.state.edgeSelect;
         this.setState(
           produce(draft => {
             draft.visualizer.geometryUpdated = false;
             draft.visualizer.cameraUpdated = false;
-            draft.viewButtons[3].checked = !edgeSelectStatus;
-            draft.viewButtons[2].checked = false;
+            draft.edgeSelect = !edgeSelectStatus;
+            draft.faceSelect = false;
             draft.visualizer.select.enabled = !edgeSelectStatus;
             draft.visualizer.select.type = !edgeSelectStatus ? "edge" : null;
+          })
+        )
+        break;
+      
+      case "meshView":
+        this.setState(
+          produce(draft=>{
+            draft.meshView = !this.state.meshView;
+            draft.visualizer.geometryUpdated = true;
+            draft.visualizer.cameraUpdated = false;
           })
         )
         break;
@@ -816,19 +837,16 @@ class App extends React.Component {
             draft.visualizer.faces.data = JSON.parse(data).faces;
             draft.visualizer.edges.data = JSON.parse(data).edges;
             draft.visualizer.boundingBox.data = JSON.parse(data).boundingBox;
-            draft.visualizer.faces.visibility = false;
             draft.visualizer.geometryUpdated = true;
             draft.visualizer.points.data = [];
-            draft.viewButtons[0].disabled = false;
-            draft.viewButtons[1].disabled = false;
-            draft.viewButtons[2].disabled = false;
-            draft.viewButtons[3].disabled = false;
+            draft.viewButtonsDisabled = false;
+            draft.meshView = false;
           })
         )
         setTimeout(() => this.handleViewerClick("iso"), 1000);
       },
-      error: (data) => {
-        console.log("failed:", data)
+      error: () => {
+        console.log("No geometry found on database")
       }
     });
   }
@@ -884,6 +902,7 @@ class App extends React.Component {
           <Row noGutters style={{ backgroundColor: this.state.bgColor, height: "100%" }}>
             <Col xs={3} key="sideBar">
               <SideBar
+                disabled={this.state.viewButtonsDisabled}
                 handleSidebarSubmit={this.handleSidebarSubmit}
                 sideBarItems={this.state.sideBar}
                 sideBarEdit={this.state.sideBarEdit}
@@ -904,10 +923,17 @@ class App extends React.Component {
               <div style={{ position: "relative", textAlign: "center" }}>
                 <ThreeJSViewer
                   visualizerItems={this.state.visualizer}
+                  meshView={this.state.meshView}
                   addBoundaryCondition={this.addBoundaryCondition}
                   removeBoundaryCondition={this.removeBoundaryCondition} />
                 <div style={{ position: "fixed", display: "inline-block", top: "2%", left: "45%" }}>
-                  <ViewButtons items={this.state.viewButtons} handleViewerClick={this.handleViewerClick} />
+                  <ViewButtons 
+                    faceSelect = {this.state.faceSelect}
+                    edgeSelect = {this.state.edgeSelect}
+                    meshView = {this.state.meshView}
+                    disabled={this.state.viewButtonsDisabled} 
+                    handleViewerClick={this.handleViewerClick} 
+                    />
                 </div>
               </div>
             </Col>

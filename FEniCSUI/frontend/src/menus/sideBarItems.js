@@ -1,4 +1,4 @@
-import config from './config';
+import {config} from './config';
 
 // define the initial structure of the sidebar
 const sideBarItems =

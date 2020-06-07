@@ -4,6 +4,8 @@ import {
     Button,
     ButtonToolbar,
     Dropdown,
+    OverlayTrigger,
+    Tooltip,
 } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import * as icons from '@fortawesome/free-solid-svg-icons'
@@ -21,55 +23,146 @@ class ViewButtons extends React.Component {
         var items = this.props.items;
         return (
             < ButtonToolbar key="viewToolbar" >
-                {
-                    items.map(({ name, icon, disabled, type, menuItems, ...rest }) => (
-                        <div key={`item-${name}`}>
-                            {(type === "dropDown") && // && acts as conditioning: if(type === ..){}
-                                <ButtonGroup key={name} className="mr-1">
-                                    <Dropdown as={ButtonGroup} alignRight>
-                                        <Button disabled={disabled} name={name} variant="light" onClick={this.handleClick.bind(this, name)}>
-                                            <FontAwesomeIcon 
-                                            icon={icons[icon]} 
-                                            color = {(rest.color)? rest.color:null}
-                                            />
-                                        </Button>
-
-                                        <Dropdown.Toggle split disabled={disabled} variant="light" id="dropdown-split-basic" />
-
-                                        <Dropdown.Menu style={{ minWidth: "25px" }}>
-                                            {menuItems.map((item) => (
-                                                <Dropdown.Item key={item.name} onClick={this.handleClick.bind(this, item.name)}>
-                                                    {(item.color)? <FontAwesomeIcon icon={icons[item.icon]} color={item.color} size="2x"/> :<Icons icon={item.icon} />}
-                                                    
-                                                </Dropdown.Item>
-                                            ))}
-                                        </Dropdown.Menu>
-                                    </Dropdown>
-                                </ButtonGroup>}
-
-
-                            {(type === "button") &&
-                                <ButtonGroup key={name} className="mr-1">
-                                    <Button name={name} variant="light" disabled={disabled} onClick={this.handleClick.bind(this, name)}>
-                                        <FontAwesomeIcon icon={icons[icon]} />
-                                    </Button>
-                                </ButtonGroup>}
-
-                            {(type === "checkBox") &&
-                                <ButtonGroup key={name} className="mr-1 pr-1">
-                                    <Button
-                                        disabled={disabled}
-                                        variant="light"
-                                        name={name}
-                                        active={rest.checked}
-                                        onClick={this.handleClick.bind(this, name)}>
-                                        <FontAwesomeIcon icon={icons[icon]} />
-                                    </Button>
-                                </ButtonGroup>}
-                        </div>
-
-                    ))
-                }
+                <div key="item-view">
+                    <ButtonGroup key="view" className="mr-1">
+                        <Dropdown as={ButtonGroup} alignRight>
+                            <OverlayTrigger
+                                key="isoView"
+                                placement="bottom"
+                                overlay={
+                                    <Tooltip id="isoViewTooltip">
+                                        Iso view
+                                    </Tooltip>
+                                }
+                            >
+                                <Button disabled={this.props.disabled} name="iso" variant="light" onClick={this.handleClick.bind(this, "iso")}>
+                                    <FontAwesomeIcon
+                                        icon={icons["faCube"]}
+                                    />
+                                </Button>
+                            </OverlayTrigger>
+                            <Dropdown.Toggle split disabled={this.props.disabled} variant="light" id="dropdown-split-basic" />
+                            <Dropdown.Menu style={{ minWidth: "25px" }}>
+                                {["front", "left", "right", "back", "top", "bot"].map((name) => (
+                                    <OverlayTrigger
+                                        key={`${name}View`}
+                                        placement="bottom"
+                                        overlay={
+                                            <Tooltip id={`${name}ViewTooltip`}>
+                                                {name.charAt(0).toUpperCase() + name.slice(1)} view
+                                            </Tooltip>
+                                        }
+                                    >
+                                        <Dropdown.Item key={name} onClick={this.handleClick.bind(this, name)}>
+                                            <Icons icon={name} />
+                                        </Dropdown.Item>
+                                    </OverlayTrigger>
+                                ))}
+                            </Dropdown.Menu>
+                        </Dropdown>
+                    </ButtonGroup>
+                    <ButtonGroup key="fit" className="mr-1">
+                        <OverlayTrigger
+                            key="fit"
+                            placement="bottom"
+                            overlay={
+                                <Tooltip id="fitTooltip">
+                                    Fit to screen
+                                    </Tooltip>
+                            }
+                        >
+                            <Button name="fit" variant="light" disabled={this.props.disabled} onClick={this.handleClick.bind(this, "fit")}>
+                                <FontAwesomeIcon icon={icons["faExpandArrowsAlt"]} />
+                            </Button>
+                        </OverlayTrigger>
+                    </ButtonGroup>
+                    <ButtonGroup key="meshView" className="mr-1 pr-1">
+                        <OverlayTrigger
+                            key="meshView"
+                            placement="bottom"
+                            overlay={
+                                <Tooltip id="meshViewTooltip">
+                                    {this.props.meshView ? "Hide mesh" : "View mesh"}
+                                </Tooltip>
+                            }
+                        >
+                            <Button
+                                disabled={this.props.disabled}
+                                variant="light"
+                                name="meshView"
+                                onClick={this.handleClick.bind(this, "meshView")}>
+                                <FontAwesomeIcon icon={this.props.meshView ? icons["faStop"] : icons["faTh"]} />
+                            </Button>
+                        </OverlayTrigger>
+                    </ButtonGroup>
+                    <ButtonGroup key="faceSelect" className="mr-1 pr-1">
+                        <OverlayTrigger
+                            key="faceSelect"
+                            placement="bottom"
+                            overlay={
+                                <Tooltip id="faceSelectTooltip">
+                                    Select Faces
+                                    </Tooltip>
+                            }
+                        >
+                            <Button
+                                disabled={this.props.disabled}
+                                variant="light"
+                                name="faceSelect"
+                                active={this.props.faceSelect}
+                                onClick={this.handleClick.bind(this, "faceSelect")}>
+                                <FontAwesomeIcon icon={icons["faObjectUngroup"]} />
+                            </Button>
+                        </OverlayTrigger>
+                    </ButtonGroup>
+                    <ButtonGroup key="edgeSelect" className="mr-1 pr-1">
+                        <OverlayTrigger
+                            key="edgeSelect"
+                            placement="bottom"
+                            overlay={
+                                <Tooltip id="edgeSelectTooltip">
+                                    Select Edges
+                                    </Tooltip>
+                            }
+                        >
+                            <Button
+                                disabled={this.props.disabled}
+                                variant="light"
+                                name="edgeSelect"
+                                active={this.props.edgeSelect}
+                                onClick={this.handleClick.bind(this, "edgeSelect")}>
+                                <FontAwesomeIcon icon={icons["faObjectGroup"]} />
+                            </Button>
+                        </OverlayTrigger>
+                    </ButtonGroup>
+                    <ButtonGroup key="colors" className="mr-1">
+                        <Dropdown as={ButtonGroup} alignRight>
+                            <OverlayTrigger
+                                key="defaultColor"
+                                placement="bottom"
+                                overlay={
+                                    <Tooltip id="defaultColorTooltip">
+                                        White background
+                                    </Tooltip>
+                                }
+                            >
+                                <Button disabled={this.props.disabled} name="bgColor" variant="light" onClick={this.handleClick.bind(this, "bgColor")}>
+                                    <FontAwesomeIcon
+                                        icon={icons["faFillDrip"]}
+                                    />
+                                </Button>
+                            </OverlayTrigger>
+                            <Dropdown.Toggle split disabled={this.props.disabled} variant="light" id="dropdown-split-basic" />
+                            <Dropdown.Menu style={{ minWidth: "25px" }}>
+                                {["darkgray", "wheat", "indigo", "navy"].map((name) => (
+                                    <Dropdown.Item key={name} onClick={this.handleClick.bind(this, `bg${name}`)}>
+                                        <FontAwesomeIcon icon={icons["faSquare"]} size="2x" color={name} />
+                                    </Dropdown.Item>
+                                ))}
+                            </Dropdown.Menu>
+                        </Dropdown>
+                    </ButtonGroup>
+                </div>
             </ButtonToolbar >
         )
     }
