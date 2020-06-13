@@ -67,6 +67,8 @@ def navierStokes(projectId, mesh, faceSets, boundarySets, config):
                 bcs.append(fn.DirichletBC(W.sub(0), fn.Constant(
                     (0.0, 0.0, 0.0)), boundarySets, int(edge), method='topological'))
         if BC["boundaryType"] == "inlet":
+            log(type(BC['value']))
+            log(BC['value'])
             vel = json.loads(BC['value'])
             for edge in json.loads(BC["edges"]):
                 bcs.append(fn.DirichletBC(W.sub(0), fn.Expression(

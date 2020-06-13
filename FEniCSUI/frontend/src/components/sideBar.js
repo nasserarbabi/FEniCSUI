@@ -66,7 +66,7 @@ class SideBar extends React.Component {
                                     <Form.Control
                                         name={input.id}
                                         key={`${name}-${input.id}`}
-                                        as={input.as}
+                                        as={input.type}
                                         type={input.type}
                                         defaultValue={input.default}
                                         placeholder={input.placeholder}
@@ -78,7 +78,6 @@ class SideBar extends React.Component {
                                         {input.type == "select" ?
                                             input.formOptions.map((option) => (
                                                 <option
-                                                    selected = {option.value==input.default?true:false}
                                                     key={option.label}
                                                     value={option.value}
                                                 >
@@ -185,7 +184,7 @@ class SideBar extends React.Component {
                                         <Card.Body className="p-1">
                                             <table >
                                                 <tbody>
-                                                    {item.cardContent.map((item, index) => (
+                                                    {this.props.sidebarCardsContent[menu].map((item, index) => (
                                                         <tr key={`tableRow-${menu}-${item}`} style={{ width: "100%" }}>
                                                             <td style={{ width: "95%" }}>
                                                                 <Button 

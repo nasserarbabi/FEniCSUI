@@ -199,11 +199,11 @@ class solvers(APIView):
                 volumes={solverPath: {
                     'bind': '/home/fenics/shared', 'mode': 'rw'}},
                 working_dir="/home/fenics/shared",
-                runs solver.py with two arguments to be passed in to python file
+                # runs solver.py with two arguments to be passed in to python file
                 command=["`sudo pip3 install requests \n python3 solverHub.py {} {}`".format(
                     project.id, solver)],
                 name="FEniCSDocker",
-                auto_remove=Ture,
+                auto_remove=False,
                 detach=True)
             thread = Thread(target=streamDockerLog, args=(container, project))
             thread.start()

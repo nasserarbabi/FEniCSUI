@@ -8,7 +8,7 @@ FEniCSUI is based on python 3, docker, and gmsh, all of which are available for 
 
 Windows users can use [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10) (WSL) to run the code in the windows environment. 
 
-##### 1. Docker:
+### 1. Docker:
 
 The solver uses the docker image of FEniCS project to run the finite element code. This requires the docker to be installed and running in your system. 
 
@@ -51,7 +51,7 @@ $ docker-compose --version
 
 For instructions on installing docker for other operating systems, please refer to the [docker's official documentations](https://www.docker.com/get-started)
 
-##### 2. gmsh:
+### 2. gmsh:
 
 gmsh is a powerful library to generate mesh suitable for finite element analysis. FEniCSUI use [pygmsh](https://pypi.org/project/pygmsh/) to call gmsh commands from web server backend, however, it requires gmsh to be installed on the system. FEniCSUI currently supports gmsh 3.0.6 which is the default installation on ubuntu 18.04 LTS.
 
@@ -63,7 +63,7 @@ $ sudo apt-get install -y gmsh
 
 For installation on other operating systems, please refer to the [Gmsh's official documentations](https://gmsh.info/). A list of binaries of all versions are available from [here](https://gmsh.info/bin/).
 
-##### 3. python environment and dependencies
+### 3. python environment and dependencies
 
 Clone the FEniCSUI repository to a local directory:
 
@@ -110,7 +110,7 @@ $ python manage.py runserver
 
 Go to `localhost:8000` in your web browser. 
 
-### User interface walk through:
+## User interface walk through:
 
 The FEniCSUI library contains one demo example of a user interface built to solve 2D Navier-Stokes equations using mixed element formulation based on section 3.4 of FEniCS [tutorial book](https://fenicsproject.org/pub/tutorial/html/._ftut1009.html#ftut1:NS), vol 1. You can use the solver on any desired surface geometry, however, the following section shows how to use user interface to solve "Test problem 2: Flow past a cylinder" in the FEniCS tutorial book, using the same geometry.
 
@@ -126,7 +126,7 @@ If you have already uploaded the geometry, it should appear in the CAD viewer, o
 
 The first step is to upload the geometry to the server.
 
-# Table of Contents:
+## Table of Contents:
 
 - [Tutorial](tutorial.md)
 - [Solvers](solvers.md)

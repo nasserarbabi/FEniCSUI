@@ -1,0 +1,163 @@
+---
+solver: navierStokes # this is the name of the solver. The same with sovler name in sovler/src folder
+config:
+  mesher:
+    label: Mesh
+    icon: faThLarge
+    form:
+      - id: mesher
+        type: select
+        label: "Mesh:"
+        default: 0.3
+        formOptions:
+          - label: Coarse
+            value: 0.5
+          - label: Medium
+            value: 0.3
+          - label: Fine
+            value: 0.1
+    formButtons:
+      - id: submit-mesher
+        label: Mesh
+        type: primary
+  materials:
+    label: Materials
+    icon: faTint
+    form:
+      - id: Name
+        type: input
+        label: "Material Name:"
+        placeholder: water
+        invalidFeedback: Please enter a valid name
+        validation:
+          required: true
+      - id: viscosity
+        type: input
+        label: "Viscosity:"
+        placeholder: "0.001"
+        invalidFeedback: Please enter viscosity in the range of 0.0001 to 1e5
+        validation:
+          minValue: 0.0001
+          maxValue: 100000
+          required: true
+      - id: density
+        type: input
+        label: "Density:"
+        placeholder: "1"
+        invalidFeedback: Please enter density in the range of 1 to 1e5
+        validation:
+          minValue: 1
+          maxValue: 100000
+          required: true
+    formButtons:
+      - id: submit-material
+        label: Set Material
+  BCs:
+    label: Boundary Conditions
+    icon: faBorderStyle
+    form:
+      - id: Name
+        type: input
+        label: "Name:"
+        placeholder: BC_1
+        invalidFeedback: Please enter a valid name
+        validation:
+          required: true
+      - id: boundaryType
+        type: select
+        formOptions:
+          - label: Inlet
+            value: inlet
+          - label: Outlet
+            value: outlet
+          - label: Wall
+            value: wall
+        label: "Boundary Type:"
+        fieldChange:
+          - selectedField: outlet
+            targetId: value
+            changingFields:
+              - label
+              - placeholder
+            changeTo:
+              - Pressure
+              - "10"
+          - selectedField: inlet
+            targetId: value
+            changingFields:
+              - label
+              - placeholder
+            changeTo:
+              - Velocity
+              - "[1,0,0]"
+          - selectedField: wall
+            targetId: value
+            changingFields: hide
+      - id: value
+        type: input
+        label: "Velocity:"
+        placeholder: "[1,0,0]"
+        invalidFeedback:
+          Please enter the velocity type a vector [1,0,0]
+        validation:
+          required: true
+    formButtons:
+      - id: submit-BCs
+        label: Apply BCs
+    visualizerSelect: edges
+  sections:
+    label: Sections
+    icon: faPuzzlePiece
+    form:
+      - id: Name
+        type: input
+        label: "Name:"
+        placeholder: section 1
+        default: section_1
+        invalidFeedback: Please enter a valid name
+        validation:
+          required: true
+      - id: material
+        type: select
+        formOptions: []
+        optionsFrom: materials
+        label: "Material:"
+    formButtons:
+      - id: submit-sections
+        label: Assign Section
+    visualizerSelect: faces
+  steps:
+    label: steps
+    icon: faTint
+    form:
+      - id: Name
+        type: input
+        label: "Name:"
+        placeholder: Step 1
+        invalidFeedback: Please enter a valid name
+        validation:
+          required: true
+      - id: finalTime
+        type: input
+        label: "Final time:"
+        placeholder: "1"
+        default: "1"
+        invalidFeedback: Please enter a value grater than 0.001
+        helperText: The total time of analysis
+        validation:
+          required: true
+          minValue: 0.001
+      - id: iterationNo
+        type: input
+        label: "Number of iterations:"
+        placeholder: "5000"
+        default: "5000"
+        invalidFeedback: Please enter a value between 1 and 20,000
+        helperText: The total time of analysis
+        validation:
+          required: true
+          minValue: 1
+          maxValue: 20000
+    formButtons:
+      - id: submit-steps
+        label: Create Step

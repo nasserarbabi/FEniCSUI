@@ -8,7 +8,6 @@ import ViewButtons from './viewButtons';
 // import initial state
 import sideBarItems from '../menus/sideBarItems';
 import visualizerItems from '../menus/visualizerItems';
-import {solver} from '../menus/config';
 
 import { Container, Row, Col, Modal, Button, ProgressBar, Alert, Form } from 'react-bootstrap';
 import produce from 'immer';
@@ -40,15 +39,32 @@ class App extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = {
 
+    // set solver and sover configuration from server 
+    var solver = "";
+    var cardContent = new Object();
+    $.ajax({
+      async: false,
+      url: `../../../frontEndConfig`,
+      datatype: 'json',
+      type: 'GET',
+      success: (data) => {
+        var config = data.config;
+        solver = data.solver;
+        Object.assign(sideBarItems, config);
+        Object.keys(sideBarItems).map((key)=>(cardContent[key]=[]))
+      }
+    })
+    
+    this.state = {
       // side bar states
       sideBar: sideBarItems,
       sideBarEdit: false,
       sideBarEditId: null,
+      sidebarCardsContent: cardContent,
 
       // view navbar states
-      viewButtonsDisabled: true,
+      viewButtonsDisabled: false,
       faceSelect:false,
       edgeSelect:false,
       meshView: false,
@@ -57,7 +73,8 @@ class App extends React.Component {
       visualizer: visualizerItems,
       bgColor: 0xffffff,
 
-      // solver states
+      // solver 
+      solver: solver,
       progress: 0,
       solverSubmitted: false,
       modalShow: false,
@@ -159,13 +176,13 @@ class App extends React.Component {
     this.setState({ error: false, errorMessage: "", dockerLogs:"Analysis submitted" })
     if (this.state.solverSubmitted) {
       $.ajax({
-        url: `../../../solvers/${project}?solver=${solver}`,
+        url: `../../../solvers/${project}?solver=${this.state.solver}`,
         type: 'DELETE',
       })
       this.setState({solverSubmitted:false, progress: 0, dockerLogs:this.state.dockerLogs + "\r\n"+"Solver killed"});
     } else {
       $.ajax({
-        url: `../../../solvers/${project}?solver=${solver}`,
+        url: `../../../solvers/${project}?solver=${this.state.solver}`,
         type: 'GET',
         success: () => {
           this.setState({solverSubmitted:true});
@@ -213,7 +230,7 @@ class App extends React.Component {
         }) : null;
         this.setState(
           produce(draft => {
-            draft.sideBar[menu].cardContent = items
+            draft.sidebarCardsContent[menu] = items
           })
         )
       }
@@ -253,6 +270,11 @@ class App extends React.Component {
 
   setPopoverState(menu) {
     /** opens the popover related to the menu input, and set all others to close */
+    this.setState(
+      produce(draft=>{
+        draft.sideBar = sideBarItems;
+      })
+    )
     Object.keys(this.state.sideBar).map((item) => {
       if (item !== menu) {
         this.setState(
@@ -264,6 +286,7 @@ class App extends React.Component {
           produce(draft => {
             draft.sideBar[item].popoverState = !this.state.sideBar[item].popoverState;
           }));
+        
       }
     });
   };
@@ -460,8 +483,9 @@ class App extends React.Component {
             }) : null;
             this.setState(
               produce(draft => {
-                draft.sideBar[formData.name].cardContent = items;
+                draft.sidebarCardsContent[formData.name] = items;
                 draft.sideBar[formData.name].cardShow = true;
+                
               })
             )
           },
@@ -529,7 +553,7 @@ class App extends React.Component {
     var target = document.getElementById(`formGroup-${changeInstruction.targetId}`);
     target.children[1].value = "";
     var formName = target.parentElement.name;
-    if (changeInstruction.changingfields === "hide") {
+    if (changeInstruction.changingFields === "hide") {
       target.style.display = "none";
     } else {
       target.style.display = "block";
@@ -539,7 +563,7 @@ class App extends React.Component {
           var form = draft.sideBar[formName].form;
           form.forEach((item, num) => {
             if (item.id === changeInstruction.targetId) {
-              changeInstruction.changingfields.forEach((field, index) => {
+              changeInstruction.changingFields.forEach((field, index) => {
                 draft.sideBar[formName].form[num][field] = changeInstruction.changeTo[index];
               })
             }
@@ -800,7 +824,7 @@ class App extends React.Component {
             }) : null;
             this.setState(
               produce(draft => {
-                draft.sideBar[menu].cardContent = items
+                draft.sidebarCardsContent[menu] = items
               })
             )
           }
@@ -888,6 +912,7 @@ class App extends React.Component {
   }
 
   componentDidMount() {
+
     this.getGeometryIfExists()
     this.updateConfigFromServer()
     this.getOptions()
@@ -905,6 +930,7 @@ class App extends React.Component {
                 disabled={this.state.viewButtonsDisabled}
                 handleSidebarSubmit={this.handleSidebarSubmit}
                 sideBarItems={this.state.sideBar}
+                sidebarCardsContent={this.state.sidebarCardsContent}
                 sideBarEdit={this.state.sideBarEdit}
                 handleSidebarClick={this.handleSidebarClick}
                 handleChangingFields={this.handleChangingFields}

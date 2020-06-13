@@ -2,3 +2,4 @@ django==3.0
 djangorestframework==3.11
 pygmsh==6.1.1
 docker==4.2.0
+PyYAML==5.3.1
