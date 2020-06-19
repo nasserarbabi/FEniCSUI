@@ -66,7 +66,7 @@ class SideBar extends React.Component {
                                     <Form.Control
                                         name={input.id}
                                         key={`${name}-${input.id}`}
-                                        as={input.type}
+                                        as={input.type == "file"? "input" : input.type}
                                         type={input.type}
                                         defaultValue={input.default}
                                         placeholder={input.placeholder}

@@ -12,10 +12,7 @@ const sideBarItems =
         as: "input",
         type: "file",
         label: "Choose step file:",
-        placeholder: "",
-        default: "",
         isInvalid: false,
-        invalidFeedback: "",
         validation: { required: true }
       },
     ],
