@@ -67,8 +67,6 @@ def navierStokes(projectId, mesh, faceSets, boundarySets, config):
                 bcs.append(fn.DirichletBC(W.sub(0), fn.Constant(
                     (0.0, 0.0, 0.0)), boundarySets, int(edge), method='topological'))
         if BC["boundaryType"] == "inlet":
-            log(type(BC['value']))
-            log(BC['value'])
             vel = json.loads(BC['value'])
             for edge in json.loads(BC["edges"]):
                 bcs.append(fn.DirichletBC(W.sub(0), fn.Expression(
@@ -80,6 +78,7 @@ def navierStokes(projectId, mesh, faceSets, boundarySets, config):
 
 
     f = fn.Constant((0.0, 0.0, 0.0))
+	
     #  weak form NSE
     NSE = (1.0/dt)*fn.inner(u, v)*fn.dx + b(u0, u, v)*fn.dx + nu * \
         contract(u, v)*fn.dx - fn.div(v)*p*fn.dx + q*fn.div(u)*fn.dx
@@ -116,15 +115,15 @@ def navierStokes(projectId, mesh, faceSets, boundarySets, config):
             sendFile(projectId, resultDir+"pressure.h5")
             statusUpdate(projectId, "STARTED", {"progress":jj/t_num*100})
 
-if __name__ == "__main__":
-    import os
-    import sys
-    sys.path.append(os.path.realpath('.'))
-    from mesh2Fenics import meshReader
-    from testData import config, mesh
-    projectId = '0f4abb38-9a1d-48bc-9737-cf2ade4d8373'
-    config = config()
-    mesh = json.loads(mesh())
-    meshSets = meshReader(mesh)
-    navierStokes(projectId, meshSets["feMesh"],
-                 meshSets['faceSets'], meshSets['edgeSets'], config)
+# if __name__ == "__main__":
+#    import os
+#    import sys
+#    sys.path.append(os.path.realpath('.'))
+#    from mesh2Fenics import meshReader
+#    from testData import config, mesh
+#    projectId = '0f4abb38-9a1d-48bc-9737-cf2ade4d8373'
+#    config = config()
+#    mesh = json.loads(mesh())
+#    meshSets = meshReader(mesh)
+#    navierStokes(projectId, meshSets["feMesh"],
+#                 meshSets['faceSets'], meshSets['edgeSets'], config)

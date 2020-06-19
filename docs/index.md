@@ -79,7 +79,7 @@ Go to the main directory:
 $ cd FEniCSUI
 ```
 
-Create a new virtual environment and activate it:
+Create and activate new virtual environment::
 
 ```bash
 $ virtualenv venv
@@ -110,7 +110,7 @@ $ python manage.py runserver
 
 Go to `localhost:8000` in your web browser. 
 
-## User interface walk through:
+## Demo user interface walk through:
 
 The FEniCSUI library contains one demo example of a user interface built to solve 2D Navier-Stokes equations using mixed element formulation based on section 3.4 of FEniCS [tutorial book](https://fenicsproject.org/pub/tutorial/html/._ftut1009.html#ftut1:NS), vol 1. You can use the solver on any desired surface geometry, however, the following section shows how to use user interface to solve "Test problem 2: Flow past a cylinder" in the FEniCS tutorial book, using the same geometry.
 

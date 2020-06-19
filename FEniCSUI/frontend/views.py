@@ -9,6 +9,6 @@ class frontEndConfig(APIView):
         """
         return a dictionary read from the config.yml file
         """
-        with open('../config.yml') as configFile:
+        with open('./config.yml') as configFile:
             config = yaml.load(configFile, Loader=yaml.FullLoader)
         return Response(config)
