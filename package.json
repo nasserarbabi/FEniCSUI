@@ -47,6 +47,6 @@
     "react-bootstrap": "^1.0.0-beta.16",
     "sass-loader": "^8.0.2",
     "style-loader": "^1.1.2",
-    "three": "^0.112.1"
+    "three": "^0.125.0"
   }
 }
